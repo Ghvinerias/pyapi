@@ -16,13 +16,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Get Version Tag
-        run: echo "::set-output name=version::$(echo ${{ github.event.head_commit.message }} | grep -oP '(?<=Version:)\d+\.\d+')"
+        run: echo "::set-output name=version::$(echo ${{ github.event.head_commit.message }} | grep -oP '(?i)version\s*:?\s*\K\d+(\.\d+)+'
 
       - name: Login to GitHub Container Registry
         run: echo ${{ secrets.DOCKERUHUB_SECRET }} | docker login -u ghvinerias --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ghvinerias/pyapi::${{ steps.get_version.outputs.version }} .
+        run: docker build -t ghvinerias/pyapi:${{ steps.get_version.outputs.version }} .
 
       - name: Publish Docker Image to GitHub Container Registry
-        run: docker push ghvinerias/pyapi::${{ steps.get_version.outputs.version }}
+        run: docker push ghvinerias/pyapi:${{ steps.get_version.outputs.version }}

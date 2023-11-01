@@ -26,7 +26,7 @@ jobs:
         run: echo ${{ secrets.DOCKERUHUB_SECRET }} | docker login -u ghvinerias --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ghvinerias/pyapi:${{ steps.get_version.outputs.version }} .
+        run: docker build -t ghvinerias/pyapi:$VERSION_TAG .
 
       - name: Publish Docker Image to GitHub Container Registry
-        run: docker push ghvinerias/pyapi:${{ steps.get_version.outputs.version }}
+        run: docker push ghvinerias/pyapi:$VERSION_TAG

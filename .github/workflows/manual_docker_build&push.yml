@@ -2,6 +2,10 @@ name: Manual Docker Image Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Docker image tag'
+        required: true
 
 jobs:
   build-and-publish:
@@ -11,14 +15,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set Docker Image Tag
-        run: echo "IMAGE_TAG=${{ github.event.client_payload.tag }}" >> $GITHUB_ENV
-
       - name: Login to GitHub Container Registry
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ env.IMAGE_TAG }} .
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.event.inputs.tag }} .
 
       - name: Publish Docker Image to GitHub Container Registry
-        run: docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
+        run: docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ github.event.inputs.tag }}

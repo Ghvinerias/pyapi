@@ -17,6 +17,7 @@ jobs:
 
       - name: Get Version Tag
         run: echo "::set-output name=version::$(echo ${{ github.event.head_commit.message }} | grep -oP '(?i)version\s*:?\s*\K\d+(\.\d+)+')"
+      - name: Get Tag
         run: echo ${{ steps.get_version.outputs.version }}
 
       - name: Login to GitHub Container Registry

@@ -20,7 +20,7 @@ jobs:
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}:${{ steps.input_tag.outputs.tag }} .
+        run: docker build -t ghcr.iog/ghvinerias:${{ steps.input_tag.outputs.tag }} .
 
       - name: Publish Docker Image to GitHub Container Registry
-        run: docker push ghcr.io/${{ github.repository_owner }}:${{ steps.input_tag.outputs.tag }}
+        run: docker push ghcr.iog/ghvinerias:${{ steps.input_tag.outputs.tag }}

@@ -11,16 +11,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Get Docker Image Tag
-        id: input_tag
-        run: |
-          echo "::set-output name=tag::$(read -p 'Enter Docker Image Tag: ' tag && echo $tag)"
+      - name: Set Docker Image Tag
+        run: echo "IMAGE_TAG=${{ github.event.client_payload.tag }}" >> $GITHUB_ENV
 
       - name: Login to GitHub Container Registry
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ghcr.iog/ghvinerias:${{ steps.input_tag.outputs.tag }} .
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ env.IMAGE_TAG }} .
 
       - name: Publish Docker Image to GitHub Container Registry
-        run: docker push ghcr.iog/ghvinerias:${{ steps.input_tag.outputs.tag }}
+        run: docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:${{ env.IMAGE_TAG }}

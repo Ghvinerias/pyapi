@@ -1,32 +1,10 @@
-name: Manual Docker Image Publish
+name: Automatic Docker Image Publish
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Docker image tag'
-        required: true
   push:
     branches:
       - main
-
 jobs:
-  build-and-publish:
-    name: Build and Publish Docker Image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Login to GitHub Container Registry
-        run: echo ${{ secrets.DOCKERUHUB_SECRET }} | docker login -u ghvinerias --password-stdin
-
-      - name: Build Docker Image
-        run: docker build -t ghvinerias/pyapi:${{ github.event.inputs.tag }} .
-
-      - name: Publish Docker Image to GitHub Container Registry
-        run: docker push ghvinerias/pyapi:${{ github.event.inputs.tag }}
-
   build-and-publish-automatic:
     name: Build and Publish Docker Image (Automatic)
     if: |

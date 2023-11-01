@@ -18,7 +18,7 @@ jobs:
       - name: Get Version Tag
         run: | 
           VERSION_TAG=$(echo ${{ github.event.head_commit.message }} | grep -oP '(?i)version\s*:?\s*\K\d+(\.\d+)+')
-          "VERSION_TAG=${VERSION_TAG}" >> $GITHUB_ENV 
+          echo "VERSION_TAG=${VERSION_TAG}" >> $GITHUB_ENV 
       - name: Get Tag
         run: echo $VERSION_TAG
 

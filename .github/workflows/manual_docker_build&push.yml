@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Login to GitHub Container Registry
-        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login -u ghvinerias --password-stdin
+        run: echo ${{ secrets.DOCKERUHUB_SECRET }} | docker login -u ghvinerias --password-stdin
 
       - name: Build Docker Image
         run: docker build -t ghvinerias/pyapi:${{ github.event.inputs.tag }} .

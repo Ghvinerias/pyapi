@@ -6,6 +6,9 @@ on:
       tag:
         description: 'Docker image tag'
         required: true
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-publish:
@@ -24,3 +27,24 @@ jobs:
       - name: Publish Docker Image to GitHub Container Registry
         run: docker push ghvinerias/pyapi:${{ github.event.inputs.tag }}
 
+  build-and-publish-automatic:
+    name: Build and Publish Docker Image (Automatic)
+    if: |
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, 'Version')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get Version Tag
+        run: echo "::set-output name=version::$(echo ${{ github.event.head_commit.message }} | grep -oP '(?<=Version:)\d+\.\d+')"
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.DOCKERUHUB_SECRET }} | docker login -u ghvinerias --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t ghvinerias/pyapi::${{ steps.get_version.outputs.version }} .
+
+      - name: Publish Docker Image to GitHub Container Registry
+        run: docker push ghvinerias/pyapi::${{ steps.get_version.outputs.version }}

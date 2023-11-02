@@ -1,7 +1,7 @@
 import os
 from flask import request, jsonify
 from app import app
-from .mongo import MongoAPI
+from mongo import MongoAPI
 
 MONGO_HOST = os.environ.get('MONGO_HOST')
 MONGO_PORT = int(os.environ.get('MONGO_PORT'))

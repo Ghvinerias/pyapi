@@ -1,5 +1,7 @@
 import os
 from flask import Flask, request, jsonify, make_response
+from flask_swagger_ui import get_swaggerui_blueprint
+from flask_swagger import swagger
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 
@@ -16,6 +18,24 @@ MONGO_PASS = os.environ.get('MONGO_PASS')
 
 client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/")
 db = client[MONGO_DB]
+
+# Define Swagger UI blueprint
+SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI (without trailing '/')
+API_URL = '/static/swagger.json'  # URL for your API specification
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={'app_name': "Your Application Name"}
+)
+app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+# Generate Swagger specification
+@app.route('/api/swagger')
+def get_api_spec():
+    swag = swagger(app, from_file_keyword='swagger_from_file')
+    swag['info']['version'] = "1.0"
+    swag['info']['title'] = "Your Application API"
+    return jsonify(swag)
 
 # Test MongoDB connection
 @app.route('/test', methods=['GET'])

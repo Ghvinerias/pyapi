@@ -1,2 +1,4 @@
 flask
 pymongo
+flask-swagger-ui
+flask-swagger

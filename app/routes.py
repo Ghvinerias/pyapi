@@ -1,6 +1,8 @@
 import os
-from flask import request, jsonify
+from flask import Flask, request, jsonify
 from mongo import MongoAPI
+
+app = Flask(__name__)
 
 MONGO_HOST = os.environ.get('MONGO_HOST')
 MONGO_PORT = int(os.environ.get('MONGO_PORT'))
@@ -30,7 +32,9 @@ def generate_config():
 
 @app.route('/list_configs', methods=['GET'])
 def list_configs():
-    return jsonify(mongo.list_configs())
+    data = request.get_json()
+    collection = data.get('collection')
+    return jsonify(mongo.list_configs(collection))
 
 @app.route('/list_templates', methods=['GET'])
 def list_templates():
@@ -47,3 +51,9 @@ def get_config():
     data = request.get_json()
     config_name = data.get('config_name')
     return jsonify(mongo.get_config(config_name))
+
+
+
+
+print("Starting the Flask server...")
+app.run(debug=True, host='0.0.0.0', port=5000)

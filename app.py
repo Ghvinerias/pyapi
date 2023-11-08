@@ -15,6 +15,9 @@ MONGO_DB = os.environ.get('MONGO_DB')
 MONGO_USER = os.environ.get('MONGO_USER')
 MONGO_PASS = os.environ.get('MONGO_PASS')
 
+configs_password = os.environ.get('MONGO_PASS')
+infra_admin_password = os.environ.get('MONGO_INITDB_ROOT_PASSWORD')
+
 
 client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/")
 db = client[MONGO_DB]
@@ -66,21 +69,22 @@ def upload_file():
 # Generate config
 @app.route('/generate_config', methods=['POST'])
 def generate_config():
-    data = request.json
-    template_name = data.get('template_name')
-    strings = data.get('strings')
-    collection_name = data.get('collection_name')
-    config_name = data.get('config_name')
-
     try:
+        data = request.get_json()
+        template_name = data.get('template_name')
+        strings = data.get('strings')
+        collection_name = data.get('collection_name')
+        config_name = data.get('config_name')
+
         template = db.templates.find_one({'file_name': template_name})
         if not template:
             return jsonify({'error': 'Template not found'}), 404
 
-        template_content = template['data'].decode('utf-8')  # Decode the binary data
+        template_content = template['content']
 
         # Replace strings in the template content
-        for old_string, new_string in strings:
+        for pair in strings:
+            old_string, new_string = pair
             template_content = template_content.replace(old_string, new_string)
 
         # Save the modified template in the specified collection with the provided config name
@@ -114,38 +118,72 @@ def list_templates():
 # Show template
 @app.route('/show_template', methods=['POST'])
 def show_template():
-    template_name = request.json.get('template_name')
-
     try:
+        data = request.get_json()
+        template_name = data.get('template_name')
+
         template = db.templates.find_one({'file_name': template_name})
         if not template:
             return jsonify({'error': 'Template not found'}), 404
 
-        template_content = template['data'].decode('utf-8')  # Decode the binary data
-        return jsonify({'template_content': template_content})
+        template_content = template['content']
+        return jsonify({'content': template_content})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 # Get config
 @app.route('/get_config', methods=['POST'])
 def get_config():
-    data = request.json
-    config_name = data.get('config_name')
-    collection_name = data.get('collection_name')
-
     try:
+        data = request.get_json()
+        config_name = data.get('config_name')
+        collection_name = data.get('collection_name')
+
         config = db[collection_name].find_one({'name': config_name})
         if not config:
             return jsonify({'error': 'Config not found'}), 404
 
         config_content = config['content']
 
-        # Create and send the file as a download attachment
         response = make_response(config_content)
         response.headers['Content-Disposition'] = f'attachment; filename={config_name}.txt'
+        response.headers['Content-Type'] = 'text/plain'
         return response
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# Configure New DB    
+@app.route('/configure_new_db', methods=['POST'])
+def run_configure_new_db():
+    try:        # Check if collections exist, create if not
+        collections_to_create = ['templates', 'nginx', 'appsettings']
+        existing_collections = db.list_collection_names()
+        for collection_name in collections_to_create:
+            if collection_name not in existing_collections:
+                db.create_collection(collection_name)
+                print(f"Collection '{collection_name}' created.")
+            else:
+                print(f"Collection '{collection_name}' already exists.")
 
+        # Check if users exist, create if not
+        users_to_create = [
+            {"name": "configs", "pwd": configs_password, "roles": [{"role": "readWrite", "db": "infra"}]},
+            {"name": "infra_admin", "pwd": infra_admin_password, "roles": [{"role": "dbOwner", "db": "infra"}]}
+        ]
+
+        existing_users = db.command('usersInfo')
+        existing_usernames = [user['user'] for user in existing_users['users']]
+
+        for user_data in users_to_create:
+            if user_data['name'] not in existing_usernames:
+                db.command("createUser", user_data['name'], pwd=user_data['pwd'], roles=user_data['roles'])
+                print(f"User '{user_data['name']}' created.")
+            else:
+                print(f"User '{user_data['name']}' already exists.")
+
+        return jsonify({'message': 'Database configuration completed successfully.'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
